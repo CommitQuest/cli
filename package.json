@@ -1,0 +1,35 @@
+{
+  "name": "commitquest",
+  "version": "1.0.0",
+  "description": "A fun CLI tool that turns Git commits into an RPG-style dashboard",
+  "main": "src/index.js",
+  "bin": {
+    "commitquest": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "git",
+    "cli",
+    "rpg",
+    "dashboard",
+    "commits",
+    "gamification"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "inquirer": "^8.2.6",
+    "open": "^9.1.0",
+    "simple-git": "^3.22.0"
+  }
+}

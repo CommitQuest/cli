@@ -1,0 +1,324 @@
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const ApiClient = require('../api/client');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+class CharacterService {
+  static async hasCharacter() {
+    try {
+      const apiClient = new ApiClient();
+      const character = await apiClient.getCharacter();
+      return character !== null;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  static async getUserStats() {
+    try {
+      const apiClient = new ApiClient();
+      const stats = await apiClient.getUserStats();
+      return {
+        level: stats.character?.stats?.level || 1,
+        experience_gained: stats.character?.stats?.experience || 0
+      };
+    } catch (error) {
+      // Return default values on error
+      return { level: 1, experience_gained: 0 };
+    }
+  }
+
+  // Touch config file to trigger extension refresh
+  static touchConfigFile() {
+    try {
+      const configDir = path.join(os.homedir(), '.commitquest');
+      const configPath = path.join(configDir, 'config.json');
+      
+      // Ensure directory exists
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+      
+      let config = {};
+      if (fs.existsSync(configPath)) {
+        // Read current content
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      }
+      
+      // Add a timestamp to ensure the file actually changes
+      config._lastUpdated = new Date().toISOString();
+      config._extensionVersion = '1.0.0';
+      
+      // Write it back to update the file
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      console.log(chalk.gray('🔄 Extension refreshed'));
+      
+    } catch (error) {
+      // Log error but don't fail - this is not critical
+      console.debug('Failed to touch config file:', error.message);
+    }
+  }
+
+  static async editCharacter() {
+    try {
+      const apiClient = new ApiClient();
+      
+      // First, get the current character
+      const currentCharacter = await apiClient.getCharacter();
+      
+      if (!currentCharacter) {
+        throw new Error('You don\'t have a character to edit. Please contact support.');
+      }
+
+      console.log(chalk.blue.bold('✏️  Edit Your Character\n'));
+      console.log(chalk.gray('Current character:'));
+      console.log(chalk.cyan(`Name: ${currentCharacter.name}`));
+      
+      if (currentCharacter.character_combinations && currentCharacter.character_combinations.classes) {
+        const className = currentCharacter.character_combinations.classes.name;
+        console.log(chalk.cyan(`Class: ${this.getClassEmoji(className)} ${className}`));
+      }
+      
+      if (currentCharacter.character_combinations && currentCharacter.character_combinations.species) {
+        const speciesName = currentCharacter.character_combinations.species.name;
+        console.log(chalk.cyan(`Species: ${this.getSpeciesEmoji(speciesName)} ${speciesName}`));
+      }
+      
+      console.log('');
+
+      // Get all available character classes and species
+      const [classes, species] = await Promise.all([
+        apiClient.getCharacterClasses(),
+        apiClient.getSpecies()
+      ]);
+
+      if (classes.length === 0) {
+        throw new Error('No character classes available. Please contact support.');
+      }
+
+      if (species.length === 0) {
+        throw new Error('No species available. Please contact support.');
+      }
+
+      const { changeName } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'changeName',
+          message: 'Would you like to change your name?',
+          default: false
+        }
+      ])
+
+      let name = currentCharacter.name
+      // Ask for new name
+      if (changeName) {
+        const { characterName } = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'characterName',
+            message: 'Enter new character name:',
+            default: currentCharacter.name
+          }
+        ]);
+        name = characterName
+      }
+
+      // Ask if they want to change class
+      const { changeClass } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'changeClass',
+          message: 'Would you like to change your character class?',
+          default: false
+        }
+      ]);
+
+      let selectedClassId = null;
+      if (changeClass) {
+        console.log(chalk.yellow.bold('\nChoose your new class:\n'));
+        const classChoices = classes.map((c, index) => ({
+          name: `${index + 1}. ${this.getClassEmoji(c.name)} ${c.name} - ${c.description}`,
+          value: c.id
+        }));
+
+        const { selectedClassId: newClassId } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'selectedClassId',
+            message: 'Select your new class:',
+            choices: classChoices
+          }
+        ]);
+        selectedClassId = newClassId;
+      }
+
+      // Ask if they want to change species
+      const { changeSpecies } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'changeSpecies',
+          message: 'Would you like to change your character species?',
+          default: false
+        }
+      ]);
+
+      let selectedSpeciesId = null;
+      if (changeSpecies) {
+        console.log(chalk.yellow.bold('\nChoose your new species:\n'));
+        const speciesChoices = species.map((s, index) => ({
+          name: `${index + 1}. ${this.getSpeciesEmoji(s.name)} ${s.name} - ${s.description}`,
+          value: s.id
+        }));
+
+        const { selectedSpeciesId: newSpeciesId } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'selectedSpeciesId',
+            message: 'Select your new species:',
+            choices: speciesChoices
+          }
+        ]);
+        selectedSpeciesId = newSpeciesId;
+      }
+
+      // Update character
+      const updatedCharacter = await apiClient.updateCharacter(
+        name, 
+        selectedClassId, 
+        selectedSpeciesId
+      );
+
+      console.log(chalk.green.bold('\n🎉 Character updated successfully!\n'));
+      console.log(chalk.cyan(`👤 Name: ${updatedCharacter.name}`));
+      
+      if (updatedCharacter.character_combinations && updatedCharacter.character_combinations.classes) {
+        const className = updatedCharacter.character_combinations.classes.name;
+        console.log(chalk.cyan(`⚔️  Class: ${className}`));
+      }
+      
+      if (updatedCharacter.character_combinations && updatedCharacter.character_combinations.species) {
+        const speciesName = updatedCharacter.character_combinations.species.name;
+        console.log(chalk.cyan(`🧬 Species: ${speciesName}`));
+      }
+
+      // Trigger extension refresh
+      this.touchConfigFile();
+
+      return updatedCharacter;
+    } catch (error) {
+      throw new Error(`Character editing failed: ${error.message}`);
+    }
+  }
+
+  static async displayCharacter() {
+    try {
+      const apiClient = new ApiClient();
+      const character = await apiClient.getCharacter();
+      
+      if (!character) {
+        console.log(chalk.yellow('ℹ️  You don\'t have a character yet.'));
+        return null;
+      }
+
+      // Get user stats for level/experience
+      const userStats = await this.getUserStats();
+
+      console.log(chalk.blue.bold('👤 Your Character\n'));
+      console.log(chalk.cyan(`Name: ${character.name}`));
+      
+      // Handle the new character structure
+      if (character.character_combinations && character.character_combinations.classes && character.character_combinations.species) {
+        const className = character.character_combinations.classes.name;
+        const speciesName = character.character_combinations.species.name;
+        console.log(chalk.cyan(`Class: ${this.getClassEmoji(className)} ${className}`));
+        console.log(chalk.cyan(`Species: ${this.getSpeciesEmoji(speciesName)} ${speciesName}`));
+      } else {
+        console.log(chalk.cyan(`Class: ${this.getClassEmoji('default')} Unknown`));
+      }
+    
+
+      return character;
+    } catch (error) {
+      throw new Error(`Failed to display character: ${error.message}`);
+    }
+  }
+
+  static getClassEmoji(className) {
+    const emojiMap = {
+      'wizard': '🔮',
+      'warrior': '⚔️',
+      'rogue': '🗡️',
+      'scout': '🏃‍♂️',
+      'cleric': '⛪',
+      'ranger': '🏹',
+      'paladin': '🛡️',
+      'bard': '🎵',
+      'monk': '🥋',
+      'druid': '🌿',
+      'sorcerer': '✨',
+      'warlock': '👹',
+      'barbarian': '🪓',
+      'fighter': '⚔️',
+      'default': '⚔️'
+    };
+    // Convert to lowercase for case-insensitive matching
+    const normalizedName = className.toLowerCase();
+    return emojiMap[normalizedName] || emojiMap.default;
+  }
+
+  static getSpeciesEmoji(speciesName) {
+    const emojiMap = {
+      'human': '👤',
+      'elf': '🧚‍♀️',
+      'dwarf': '🧒',
+      'orc': '👹',
+      'lizardfolk': '🦎',
+      'default': '👤'
+    };
+    // Convert to lowercase for case-insensitive matching
+    const normalizedName = speciesName.toLowerCase();
+    return emojiMap[normalizedName] || emojiMap.default;
+  }
+  
+
+  static async listAvailableCombinations() {
+    try {
+      const apiClient = new ApiClient();
+      const classes = await apiClient.getCharacterClasses();
+      
+      console.log(chalk.blue.bold('🎭 Available Character Classes\n'));
+      
+      classes.forEach((class_, index) => {
+        console.log(chalk.cyan(`${index + 1}. ${this.getClassEmoji(class_.name)} ${class_.name}`));
+        console.log(chalk.gray(`   ${class_.description}`));
+        
+        console.log('');
+      });
+      
+      return classes;
+    } catch (error) {
+      throw new Error(`Failed to list character classes: ${error.message}`);
+    }
+  }
+}
+
+async function characterCommand() {
+  try {
+    const character = await CharacterService.displayCharacter();
+    
+    if (!character) {
+      console.log(chalk.yellow('\n🎭 You don\'t have a character yet!'));
+      console.log(chalk.gray('Create one to start your adventure:'));
+      console.log(chalk.cyan('  commitquest character edit'));
+    }
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Failed to display character:'), error.message);
+    process.exit(1);
+  }
+}
+
+module.exports = characterCommand;
+module.exports.CharacterService = CharacterService; 
