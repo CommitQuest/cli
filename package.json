@@ -2,13 +2,13 @@
   "name": "commitquest",
   "version": "1.0.0",
   "description": "A fun CLI tool that turns Git commits into an RPG-style dashboard",
-  "main": "src/index.js",
+  "main": "index.js",
   "bin": {
-    "commitquest": "./src/index.js"
+    "commitquest": "./index.js"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node src/index.js",
+    "start": "node index.js",
+    "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

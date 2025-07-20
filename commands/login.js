@@ -10,12 +10,14 @@ async function loginCommand() {
   try {
     const apiClient = new ApiClient();
     
-    // Check if server is running
+    // Check if server is accessible
     const isServerRunning = await apiClient.healthCheck();
     if (!isServerRunning) {
-      console.log(chalk.red('❌ CommitQuest server is not running!'));
-      console.log(chalk.gray('Please start the server first:'));
-      console.log(chalk.cyan('  cd server && npm install && npm start'));
+      console.log(chalk.red('❌ Cannot connect to CommitQuest server!'));
+      console.log(chalk.gray('Please check:'));
+      console.log(chalk.gray('• Your internet connection'));
+      console.log(chalk.gray('• The server is running and accessible'));
+      console.log(chalk.gray('• If using a local server: cd server && npm install && npm start'));
       process.exit(1);
     }
 

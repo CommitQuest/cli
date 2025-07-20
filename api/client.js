@@ -5,7 +5,7 @@ const os = require('os');
 
 class ApiClient {
   constructor() {
-    this.baseURL = process.env.COMMITQUEST_API_URL || 'http://localhost:3001/api';
+    this.baseURL = process.env.COMMITQUEST_API_URL || 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api';
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -208,10 +208,19 @@ class ApiClient {
   // Health check
   async healthCheck() {
     try {
-      const response = await axios.get(`${this.baseURL.replace('/api', '')}/health`);
+      // Health check should be at the root, not under /api
+      const baseUrl = this.baseURL.replace('/api', '');
+      const response = await axios.get(`${baseUrl}/health`);
       return response.data.status === 'ok';
     } catch (error) {
-      return false;
+      // If health endpoint fails, try just the base URL
+      try {
+        const baseUrl = this.baseURL.replace('/api', '');
+        const response = await axios.get(baseUrl);
+        return response.status === 200;
+      } catch (secondError) {
+        return false;
+      }
     }
   }
 }

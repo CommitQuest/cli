@@ -56,7 +56,7 @@ npm install
 npm start
 ```
 
-The server will run on `http://localhost:3001` by default.
+The server will run on `https://commit-quest-app-3914e1ae3b5a.herokuapp.com/` by default. Heroku deployed
 
 ### 2. Install the CLI
 
