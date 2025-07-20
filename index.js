@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
-require('dotenv').config();
-
-const { Command } = require('commander');
-const chalk = require('chalk');
+import 'dotenv/config';
+import { Command } from 'commander';
+import chalk from 'chalk';
 
 // Import commands
-const loginCommand = require('./commands/login');
-const logoutCommand = require('./commands/logout');
-const characterCommand = require('./commands/character');
-const dashboardCommand = require('./commands/dashboard');
-const statsCommand = require('./commands/stats');
-const refreshCommand = require('./commands/refresh');
+import loginCommand from './commands/login.js';
+import logoutCommand from './commands/logout.js';
+import characterCommand from './commands/character.js';
+import dashboardCommand from './commands/dashboard.js';
+import statsCommand from './commands/stats.js';
+import refreshCommand from './commands/refresh.js';
 
 const program = new Command();
 
@@ -42,7 +41,7 @@ program
         .description('Edit your character')
         .action(async () => {
           try {
-            const { CharacterService } = require('./commands/character');
+            const { CharacterService } = await import('./commands/character.js');
             await CharacterService.editCharacter();
           } catch (error) {
             console.error(chalk.red('❌ Character editing failed:'), error.message);
@@ -55,7 +54,7 @@ program
         .description('List available character classes')
         .action(async () => {
           try {
-            const { CharacterService } = require('./commands/character');
+            const { CharacterService } = await import('./commands/character.js');
             await CharacterService.listAvailableCombinations();
           } catch (error) {
             console.error(chalk.red('❌ Failed to list character classes:'), error.message);

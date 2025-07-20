@@ -1,6 +1,6 @@
-const chalk = require('chalk');
-const ApiClient = require('../api/client');
-const { CharacterService } = require('./character');
+import chalk from 'chalk';
+import ApiClient from '../api/client.js';
+import { CharacterService } from './character.js';
 
 async function logoutCommand() {
   try {
@@ -34,4 +34,4 @@ async function logoutCommand() {
   }
 }
 
-module.exports = logoutCommand; 
+export default logoutCommand; 

@@ -1,5 +1,5 @@
-const chalk = require('chalk');
-const { CharacterService } = require('./character');
+import chalk from 'chalk';
+import { CharacterService } from './character.js';
 
 async function refreshCommand() {
   try {
@@ -17,4 +17,4 @@ async function refreshCommand() {
   }
 }
 
-module.exports = refreshCommand; 
+export default refreshCommand; 

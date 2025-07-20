@@ -1,5 +1,5 @@
-const chalk = require('chalk');
-const ApiClient = require('../api/client');
+import chalk from 'chalk';
+import ApiClient from '../api/client.js';
 
 async function statsCommand(options) {
   try {
@@ -68,4 +68,4 @@ async function statsCommand(options) {
   }
 }
 
-module.exports = statsCommand; 
+export default statsCommand; 

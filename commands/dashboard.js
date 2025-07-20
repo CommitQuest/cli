@@ -1,6 +1,6 @@
-const chalk = require('chalk');
-const ApiClient = require('../api/client');
-const { CharacterService } = require('./character');
+import chalk from 'chalk';
+import ApiClient from '../api/client.js';
+import { CharacterService } from './character.js';
 
 async function dashboardCommand(options) {
   try {
@@ -94,4 +94,4 @@ function displayDashboard(serverStats, achievements) {
   console.log(chalk.gray('\nUse "commitquest stats" for detailed statistics'));
 }
 
-module.exports = dashboardCommand; 
+export default dashboardCommand; 

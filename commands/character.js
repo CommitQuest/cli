@@ -1,9 +1,9 @@
-const chalk = require('chalk');
-const inquirer = require('inquirer');
-const ApiClient = require('../api/client');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+import chalk from 'chalk';
+import inquirer from 'inquirer';
+import ApiClient from '../api/client.js';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 class CharacterService {
   static async hasCharacter() {
@@ -320,5 +320,5 @@ async function characterCommand() {
   }
 }
 
-module.exports = characterCommand;
-module.exports.CharacterService = CharacterService; 
+export default characterCommand;
+export { CharacterService }; 

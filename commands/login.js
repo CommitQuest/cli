@@ -1,10 +1,10 @@
-const chalk = require('chalk');
-const inquirer = require('inquirer');
-const { default: open } = require('open');
-const ApiClient = require('../api/client');
+import chalk from 'chalk';
+import inquirer from 'inquirer';
+import { default as open } from 'open';
+import ApiClient from '../api/client.js';
 
 // Import CharacterService from character command
-const { CharacterService } = require('./character');
+import { CharacterService } from './character.js';
 
 async function loginCommand() {
   try {
@@ -192,4 +192,4 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-module.exports = loginCommand; 
+export default loginCommand; 
