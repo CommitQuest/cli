@@ -79,25 +79,62 @@ async function loginCommand() {
       console.log(chalk.green('\n✅ Login successful!'));
       console.log(chalk.cyan(`👤 Welcome, ${currentUser.github_username}!`));
       
-      // Check if user has a character
+     // Check if user has a character, if not, prompt to create one
       const character = await apiClient.getCharacter();
       if (!character) {
         console.log(chalk.yellow('\n🎭 You don\'t have a character yet!'));
-        console.log(chalk.gray('You can create one with: commitquest character edit'));
-        
-        // Create a default character without interactive editing
+        console.log(chalk.gray('Let’s create one now!\n'));
+
+        // Fetch species and class options
+        const speciesList = await apiClient.getSpecies();
+        const classList = await apiClient.getCharacterClasses();
+
+        // Prompt user for character name, species, and class
+        const answers = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Enter your character name:',
+            validate: input => input.trim().length > 0 || 'Name cannot be empty'
+          },
+          {
+            type: 'list',
+            name: 'speciesId',
+            message: 'Select a species:',
+            choices: speciesList.map(species => ({
+              name: species.name,
+              value: species.id
+            }))
+          },
+          {
+            type: 'list',
+            name: 'classId',
+            message: 'Select a class:',
+            choices: classList.map(cls => ({
+              name: cls.name,
+              value: cls.id
+            }))
+          }
+        ]);
+
         try {
-          console.log('');
-          const defaultCharacter = await apiClient.createCharacter('Adventurer', 1); // Assuming class ID 1 exists
-          console.log(chalk.green('✅ Default character created!'));
-          console.log(chalk.gray('You can customize your character later with: commitquest character edit'));
-          
-          // Trigger extension refresh after character creation
+          // Create character with name and class
+          const newChar = await apiClient.createCharacter(answers.name, answers.classId);
+
+          // Update species separately if necessary
+          await apiClient.updateCharacter(answers.name, answers.classId, answers.speciesId);
+
+          console.log(chalk.green('\n✅ Character created successfully!'));
+          console.log(chalk.cyan(`🧝 Name: ${answers.name}`));
+          console.log(chalk.cyan(`🧬 Species: ${speciesList.find(s => s.id === answers.speciesId).name}`));
+          console.log(chalk.cyan(`🛡️ Class: ${classList.find(c => c.id === answers.classId).name}`));
+
           CharacterService.touchConfigFile();
         } catch (charError) {
-          console.log(chalk.yellow('⚠️  Could not create default character. You can create one manually later.'));
+          console.log(chalk.red('❌ Failed to create character:'), charError.message);
         }
       }
+
       
     } catch (error) {
       console.error(chalk.red('❌ Login failed. Please try again.'));
