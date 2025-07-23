@@ -134,7 +134,6 @@ async function loginCommand() {
           console.log(chalk.red('❌ Failed to create character:'), charError.message);
         }
       }
-
       
     } catch (error) {
       console.error(chalk.red('❌ Login failed. Please try again.'));
