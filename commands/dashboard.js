@@ -44,18 +44,8 @@ async function dashboardCommand(options) {
     // Check for achievements
     const achievementResult = await apiClient.getUserAchievements();
     
-    // Show notification for newly unlocked achievements
-    if (achievementResult.totalNewlyUnlocked > 0) {
-      console.log(chalk.green(`\n🎉 Congratulations! You've unlocked ${achievementResult.totalNewlyUnlocked} new achievement(s)!`));
-      achievementResult.newlyUnlocked.forEach(achievement => {
-        const icon = achievement.metadata?.icon || '🏆';
-        console.log(chalk.yellow(`  ${icon} ${achievement.achievement_name} - ${achievement.description}`));
-      });
-      console.log('');
-    }
-    
     // Display the dashboard
-    displayDashboard(serverStats, achievementResult.recentAchievements || []);
+    displayDashboard(serverStats, achievementResult|| []);
     
   } catch (error) {
     console.error(chalk.red('❌ Error loading dashboard:'), error.message);
@@ -85,9 +75,9 @@ function displayDashboard(serverStats, achievements) {
   // Achievements section
   if (achievements.length > 0) {
     console.log(chalk.yellow.bold('\n🏆 Recent Achievements:'));
-    achievements.forEach(achievement => {
+    achievements.slice(0, 3).forEach(achievement => {
       const icon = achievement.metadata?.icon || '🏆';
-      console.log(chalk.green(`  ${icon} ${achievement.achievement_name}`));
+      console.log(chalk.green(`  ${icon} ${achievement.name}`));
     });
   }
   

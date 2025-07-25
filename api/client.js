@@ -5,7 +5,11 @@ import os from 'os';
 
 class ApiClient {
   constructor() {
+    const dev = false;
     this.baseURL = process.env.COMMITQUEST_API_URL || 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api';
+    if (dev) {
+      this.baseURL = 'http://localhost:3001/api';
+    }
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -144,11 +148,6 @@ class ApiClient {
     return response.data.user;
   }
 
-  // async updateUserStats(stats) {
-  //   const response = await this.client.put('/user/update-stats', { stats });
-  //   return response.data.stats;
-  // }
-
   // Character methods
   async getCharacterClasses() {
     const response = await this.client.get('/character/classes');
@@ -187,6 +186,7 @@ class ApiClient {
 
   async getUserAchievements() {
     const response = await this.client.get('/achievement/user');
+    console.log('🔍 User achievements:', response.data);
     return response.data.achievements;
   }
 

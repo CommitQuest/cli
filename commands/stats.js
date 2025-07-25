@@ -56,7 +56,7 @@ async function statsCommand(options) {
       console.log(chalk.yellow('\n🏆 Achievements:'));
       serverStats.achievements.forEach(achievement => {
         const icon = achievement.metadata?.icon || '🏅';
-        console.log(`  ${icon} ${achievement.achievement_name}: ${achievement.description}`);
+        console.log(`  ${icon} ${achievement.name}: ${achievement.description}`);
       });
     } else {
       console.log(chalk.yellow('\n🏆 Achievements:'), chalk.gray('No achievements yet'));
