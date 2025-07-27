@@ -201,16 +201,6 @@ The backend server provides these main endpoints:
 
 See `server/README.md` for detailed API documentation.
 
-## Achievements
-
-- 👶 **First Steps**: Made your first commit
-- 🔥 **Getting Started**: 3-day commit streak
-- ⚡ **Week Warrior**: 7-day commit streak
-- 👑 **Commit Master**: 30-day commit streak
-- 💻 **Dedicated Developer**: 10 total commits
-- 🛡️ **Code Crusader**: 50 total commits
-- 🌟 **Legendary Coder**: 100 total commits
-- 🚗 **Daily Driver**: Average 1+ commits per day
 
 ## Requirements
 
@@ -243,7 +233,6 @@ ISC
 
 **Ready to start your coding adventure?** 🚀
 
-1. Start the server: `cd server && npm start`
 2. Login: `commitquest login`
 3. Customize your character: `commitquest character edit`
 4. Begin your quest: `commitquest dashboard` 
