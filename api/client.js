@@ -186,7 +186,6 @@ class ApiClient {
 
   async getUserAchievements() {
     const response = await this.client.get('/achievement/user');
-    console.log('🔍 User achievements:', response.data);
     return response.data.achievements;
   }
 

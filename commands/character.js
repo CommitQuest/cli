@@ -139,7 +139,7 @@ class CharacterService {
       if (changeClass) {
         console.log(chalk.yellow.bold('\nChoose your new class:\n'));
         const classChoices = classes.map((c, index) => ({
-          name: `${index + 1}. ${this.getClassEmoji(c.name)} ${c.name} - ${c.description}`,
+          name: `${index + 1}. ${this.getClassEmoji(c.name)} ${c.name} - ${chalk.gray(c.description)}`,
           value: c.id
         }));
 
@@ -168,7 +168,7 @@ class CharacterService {
       if (changeSpecies) {
         console.log(chalk.yellow.bold('\nChoose your new species:\n'));
         const speciesChoices = species.map((s, index) => ({
-          name: `${index + 1}. ${this.getSpeciesEmoji(s.name)} ${s.name} - ${s.description}`,
+          name: `${index + 1}. ${this.getSpeciesEmoji(s.name)} ${s.name} - ${chalk.gray(s.description)}`,
           value: s.id
         }));
 
