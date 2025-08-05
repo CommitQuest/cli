@@ -105,6 +105,7 @@ commitquest character list
 
 ### Basic Commands
 
+
 ```bash
 # Show the RPG dashboard (default)
 commitquest
