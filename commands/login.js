@@ -118,11 +118,7 @@ async function loginCommand() {
         ]);
 
         try {
-          // Create character with name and class
-          const newChar = await apiClient.createCharacter(answers.name, answers.classId);
-
-          // Update species separately if necessary
-          await apiClient.updateCharacter(answers.name, answers.classId, answers.speciesId);
+          const newChar = await apiClient.createCharacter(answers.name, answers.classId, answers.speciesId);
 
           console.log(chalk.green('\n✅ Character created successfully!'));
           console.log(chalk.cyan(`🧝 Name: ${answers.name}`));

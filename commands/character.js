@@ -64,25 +64,63 @@ class CharacterService {
   static async editCharacter() {
     try {
       const apiClient = new ApiClient();
-      
-      // First, get the current character
+
       const currentCharacter = await apiClient.getCharacter();
-      
+
       if (!currentCharacter) {
-        throw new Error('You don\'t have a character to edit. Please contact support.');
+        console.log(chalk.yellow('\n🎭 You don\'t have a character yet!'));
+        console.log(chalk.gray('Let\'s create one now.\n'));
+
+        const [classes, species] = await Promise.all([
+          apiClient.getCharacterClasses(),
+          apiClient.getSpecies()
+        ]);
+
+        if (classes.length === 0 || species.length === 0) {
+          throw new Error('No character classes or species available. Please contact support.');
+        }
+
+        const answers = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Enter your character name:',
+            validate: input => input.trim().length > 0 || 'Name cannot be empty'
+          },
+          {
+            type: 'list',
+            name: 'speciesId',
+            message: 'Select a species:',
+            choices: species.map(s => ({ name: s.name, value: s.id }))
+          },
+          {
+            type: 'list',
+            name: 'classId',
+            message: 'Select a class:',
+            choices: classes.map(c => ({ name: c.name, value: c.id }))
+          }
+        ]);
+
+        const newChar = await apiClient.createCharacter(answers.name, answers.classId, answers.speciesId);
+        console.log(chalk.green('\n✅ Character created successfully!'));
+        console.log(chalk.cyan(`🧝 Name: ${answers.name}`));
+        console.log(chalk.cyan(`🧬 Species: ${species.find(s => s.id === answers.speciesId).name}`));
+        console.log(chalk.cyan(`🛡️ Class: ${classes.find(c => c.id === answers.classId).name}`));
+        this.touchConfigFile();
+        return newChar;
       }
 
       console.log(chalk.blue.bold('✏️  Edit Your Character\n'));
       console.log(chalk.gray('Current character:'));
       console.log(chalk.cyan(`Name: ${currentCharacter.name}`));
       
-      if (currentCharacter.character_combinations && currentCharacter.character_combinations.classes) {
-        const className = currentCharacter.character_combinations.classes.name;
+      if (currentCharacter.classes) {
+        const className = currentCharacter.classes.name;
         console.log(chalk.cyan(`Class: ${this.getClassEmoji(className)} ${className}`));
       }
       
-      if (currentCharacter.character_combinations && currentCharacter.character_combinations.species) {
-        const speciesName = currentCharacter.character_combinations.species.name;
+      if (currentCharacter.species) {
+        const speciesName = currentCharacter.species.name;
         console.log(chalk.cyan(`Species: ${this.getSpeciesEmoji(speciesName)} ${speciesName}`));
       }
       
@@ -193,13 +231,13 @@ class CharacterService {
       console.log(chalk.green.bold('\n🎉 Character updated successfully!\n'));
       console.log(chalk.cyan(`👤 Name: ${updatedCharacter.name}`));
       
-      if (updatedCharacter.character_combinations && updatedCharacter.character_combinations.classes) {
-        const className = updatedCharacter.character_combinations.classes.name;
+      if (updatedCharacter.classes) {
+        const className = updatedCharacter.classes.name;
         console.log(chalk.cyan(`⚔️  Class: ${className}`));
       }
       
-      if (updatedCharacter.character_combinations && updatedCharacter.character_combinations.species) {
-        const speciesName = updatedCharacter.character_combinations.species.name;
+      if (updatedCharacter.species) {
+        const speciesName = updatedCharacter.species.name;
         console.log(chalk.cyan(`🧬 Species: ${speciesName}`));
       }
 
@@ -228,10 +266,9 @@ class CharacterService {
       console.log(chalk.blue.bold('👤 Your Character\n'));
       console.log(chalk.cyan(`Name: ${character.name}`));
       
-      // Handle the new character structure
-      if (character.character_combinations && character.character_combinations.classes && character.character_combinations.species) {
-        const className = character.character_combinations.classes.name;
-        const speciesName = character.character_combinations.species.name;
+      if (character.classes && character.species) {
+        const className = character.classes.name;
+        const speciesName = character.species.name;
         console.log(chalk.cyan(`Class: ${this.getClassEmoji(className)} ${className}`));
         console.log(chalk.cyan(`Species: ${this.getSpeciesEmoji(speciesName)} ${speciesName}`));
       } else {

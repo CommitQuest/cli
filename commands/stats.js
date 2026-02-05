@@ -46,8 +46,8 @@ async function statsCommand(options) {
     if (serverStats.character) {
       console.log(chalk.yellow('\n👤 Character Info:'));
       console.log(chalk.cyan('Name:'), chalk.white(serverStats.character.name));
-      if (serverStats.character.character_combinations?.classes?.name) {
-        console.log(chalk.cyan('Class:'), chalk.white(serverStats.character.character_combinations.classes.name));
+      if (serverStats.character.classes?.name) {
+        console.log(chalk.cyan('Class:'), chalk.white(serverStats.character.classes.name));
       }
     }
     

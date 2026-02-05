@@ -163,8 +163,8 @@ class ApiClient {
     return response.data.character;
   }
 
-  async createCharacter(name, classId) {
-    const response = await this.client.post('/character', { name, class_id: classId });
+  async createCharacter(name, classId, speciesId) {
+    const response = await this.client.post('/character', { name, class_id: classId, species_id: speciesId });
     return response.data.character;
   }
 

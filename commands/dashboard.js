@@ -67,8 +67,8 @@ function displayDashboard(serverStats, achievements) {
   if (serverStats.character) {
     console.log(chalk.yellow.bold('\n👤 Character:'));
     console.log(chalk.cyan('  Name:'), chalk.white(serverStats.character.name));
-    if (serverStats.character.character_combinations?.classes?.name) {
-      console.log(chalk.cyan('  Class:'), chalk.white(serverStats.character.character_combinations.classes.name));
+    if (serverStats.character.classes?.name) {
+      console.log(chalk.cyan('  Class:'), chalk.white(serverStats.character.classes.name));
     }
   }
   
