@@ -20,7 +20,6 @@ async function loginCommand() {
       console.log(chalk.gray('• If using a local server: cd server && npm install && npm start'));
       process.exit(1);
     }
-
     // Check if already logged in
     try {
       const currentUser = await apiClient.verifyToken();
