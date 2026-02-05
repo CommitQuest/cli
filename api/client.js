@@ -5,11 +5,9 @@ import os from 'os';
 
 class ApiClient {
   constructor() {
-    const dev = false;
-    this.baseURL = process.env.COMMITQUEST_API_URL || 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api';
-    if (dev) {
-      this.baseURL = 'http://localhost:3001/api';
-    }
+    const useLocal = process.env.COMMITQUEST_DEV === '1' || process.env.NODE_ENV === 'development';
+    this.baseURL = process.env.COMMITQUEST_API_URL ||
+      (useLocal ? 'http://localhost:3001/api' : 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api');
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -97,7 +95,8 @@ class ApiClient {
       console.error('Token polling error:', error.response?.data || error.message);
       return { 
         success: false, 
-        error: error.response?.data?.error || error.message || 'Token polling failed' 
+        error: error.response?.data?.error || error.message || 'Token polling failed',
+        details: error.response?.data?.details
       };
     }
   }
