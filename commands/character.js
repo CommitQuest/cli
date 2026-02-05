@@ -53,7 +53,7 @@ class CharacterService {
       
       // Write it back to update the file
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      console.log(chalk.gray('🔄 Extension refreshed'));
+      // console.log(chalk.gray('🔄 Extension refreshed'));
       
     } catch (error) {
       // Log error but don't fail - this is not critical
