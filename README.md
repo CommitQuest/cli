@@ -13,21 +13,6 @@ A fun CLI tool that turns your Git commits into an RPG-style dashboard! Transfor
 - 🏰 **Backend Server**: Centralized data management and authentication
 
 ## Architecture
-
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CLI Tool      │    │  CommitQuest    │    │   Supabase      │
-│   (Frontend)    │◄──►│  Backend Server │◄──►│   Database      │
-│                 │    │  (Shared)       │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       ▲                       
-         │                       │                       
-         ▼                       │                       
-┌─────────────────┐              │                       
-│   VS Code       │──────────────┘                       
-│   Extension     │                                      
-│   (Frontend)    │                                      
-└─────────────────┘                                      
-
 CommitQuest now uses a client-server architecture:
 
 - **CLI Client**: Lightweight command-line interface
