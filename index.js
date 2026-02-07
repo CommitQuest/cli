@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 import 'dotenv/config';
+import { createRequire } from 'module';
 import { Command } from 'commander';
 import chalk from 'chalk';
+
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json');
 
 // Import commands
 import loginCommand from './commands/login.js';
@@ -18,7 +22,7 @@ const program = new Command();
 program
   .name('commitquest')
   .description('A fun CLI tool that turns Git commits into an RPG-style dashboard')
-  .version('1.0.0');
+  .version(pkg.version);
 
 // Add commands
 program

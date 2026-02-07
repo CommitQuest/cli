@@ -1,15 +1,21 @@
 {
   "name": "commitquest",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "A fun CLI tool that turns Git commits into an RPG-style dashboard",
   "main": "index.js",
   "type": "module",
   "bin": {
     "commitquest": "./index.js"
   },
+  "files": [
+    "index.js",
+    "api/",
+    "commands/"
+  ],
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
+    "pack": "npm pack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -18,10 +24,23 @@
     "rpg",
     "dashboard",
     "commits",
-    "gamification"
+    "gamification",
+    "commitquest"
   ],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/",
+    "directory": "test/cli"
+  },
+  "homepage": "https://github.com/your-org/git-goblins#readme",
+  "bugs": {
+    "url": "https://github.com/your-org/git-goblins/issues"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
     "axios": "^1.6.0",
