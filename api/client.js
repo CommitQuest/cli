@@ -50,7 +50,14 @@ class ApiClient {
   storeToken(token) {
     try {
       const configPath = this.getConfigPath();
-      const config = { apiToken: token };
+      let config = {};
+      if (fs.existsSync(configPath)) {
+        try {
+          config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        } catch (_) { /* use empty config */ }
+      }
+      config.apiToken = token;
+      config.apiBaseUrl = this.baseURL.replace(/\/+$/, '');
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     } catch (error) {
       console.error('Error storing token:', error.message);
