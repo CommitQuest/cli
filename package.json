@@ -1,6 +1,6 @@
 {
   "name": "commitquest",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A fun CLI tool that turns Git commits into an RPG-style dashboard",
   "main": "index.js",
   "type": "module",
