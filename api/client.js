@@ -81,7 +81,6 @@ class ApiClient {
       const response = await this.client.post('/auth/device/start');
       return response.data;
     } catch (error) {
-      console.error('Device flow start error:', error.response?.data || error.message);
       return { 
         success: false, 
         error: error.response?.data?.error || error.message || 'Failed to start device flow' 
@@ -96,10 +95,8 @@ class ApiClient {
         interval: interval
       });
       
-      // Return the response directly - let the login command handle success/failure
       return response.data;
     } catch (error) {
-      console.error('Token polling error:', error.response?.data || error.message);
       return { 
         success: false, 
         error: error.response?.data?.error || error.message || 'Token polling failed',
@@ -212,16 +209,15 @@ class ApiClient {
 
   // Health check
   async healthCheck() {
+    const timeout = 5000;
     try {
-      // Health check should be at the root, not under /api
       const baseUrl = this.baseURL.replace('/api', '');
-      const response = await axios.get(`${baseUrl}/health`);
+      const response = await axios.get(`${baseUrl}/health`, { timeout });
       return response.data.status === 'ok';
     } catch (error) {
-      // If health endpoint fails, try just the base URL
       try {
         const baseUrl = this.baseURL.replace('/api', '');
-        const response = await axios.get(baseUrl);
+        const response = await axios.get(baseUrl, { timeout });
         return response.status === 200;
       } catch (secondError) {
         return false;

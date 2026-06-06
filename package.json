@@ -1,6 +1,6 @@
 {
   "name": "commitquest",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A fun CLI tool that turns Git commits into an RPG-style dashboard",
   "main": "index.js",
   "type": "module",
@@ -16,7 +16,7 @@
     "start": "node index.js",
     "dev": "node index.js",
     "pack": "npm pack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test 'test/*.test.js'"
   },
   "keywords": [
     "git",
@@ -34,22 +34,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/",
-    "directory": "test/cli"
+    "url": "https://github.com/CommitQuest/cli.git"
   },
-  "homepage": "https://github.com/your-org/git-goblins#readme",
+  "homepage": "https://github.com/CommitQuest/cli#readme",
   "bugs": {
-    "url": "https://github.com/your-org/git-goblins/issues"
+    "url": "https://github.com/CommitQuest/cli/issues"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
     "axios": "^1.6.0",
     "chalk": "^4.1.2",
+    "cli-progress": "^3.12.0",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
     "inquirer": "^8.2.6",
-    "open": "^9.1.0",
-    "simple-git": "^3.22.0"
+    "open": "^9.1.0"
   }
 }

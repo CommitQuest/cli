@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import { CharacterService } from './character.js';
+import { handleCommandError } from './ui.js';
 
 async function refreshCommand() {
   try {
     console.log(chalk.blue.bold('🔄 Refreshing CommitQuest Extension\n'));
     
-    // Touch the config file to trigger extension refresh
     CharacterService.touchConfigFile();
     
     console.log(chalk.green('✅ Extension refresh triggered!'));
@@ -13,8 +13,8 @@ async function refreshCommand() {
     console.log(chalk.gray('If it doesn\'t, try manually refreshing the extension.'));
     
   } catch (error) {
-    console.error(chalk.red('❌ Failed to refresh extension:'), error.message);
+    handleCommandError(error, { label: 'Failed to refresh extension.' });
   }
 }
 
-export default refreshCommand; 
+export default refreshCommand;

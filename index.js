@@ -48,8 +48,8 @@ program
             const { CharacterService } = await import('./commands/character.js');
             await CharacterService.editCharacter();
           } catch (error) {
-            console.error(chalk.red('❌ Character editing failed:'), error.message);
-            process.exit(1);
+            const { handleCommandError } = await import('./commands/ui.js');
+            handleCommandError(error, { label: 'Character editing failed.' });
           }
         })
     )
@@ -61,8 +61,8 @@ program
             const { CharacterService } = await import('./commands/character.js');
             await CharacterService.listAvailableCombinations();
           } catch (error) {
-            console.error(chalk.red('❌ Failed to list character classes:'), error.message);
-            process.exit(1);
+            const { handleCommandError } = await import('./commands/ui.js');
+            handleCommandError(error, { label: 'Failed to list character classes.' });
           }
         })
     );
@@ -104,4 +104,4 @@ if (process.argv.length <= 2) {
   process.exit(0);
 }
 
-program.parse(); 
+program.parse();

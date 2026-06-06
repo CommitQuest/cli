@@ -1,80 +1,83 @@
-# Packaging CommitQuest CLI for Distribution
+# Packaging & Releasing CommitQuest CLI
 
-This guide explains how to package and publish the CLI for a download page or npm.
+## How releases work
 
-## Quick Reference
+Releases are automated via GitHub Actions. When you push a version tag, the pipeline runs tests, builds a tarball, and creates a GitHub Release with the `.tgz` attached.
 
-| Action | Command |
-|--------|---------|
-| Create tarball | `npm pack` |
-| Publish to npm | `npm publish` |
-| Bump version | `npm version patch` (or minor/major) |
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
 
-## Package Contents
+This triggers `.github/workflows/release.yml`, which:
 
-The `files` field in `package.json` controls what gets published:
+1. Installs dependencies and runs the test suite
+2. Runs `npm pack` to create the tarball
+3. Creates a GitHub Release with auto-generated notes and the `.tgz` attached
+
+## Version bumping
+
+Version is defined in `package.json`. Use npm's built-in version command to bump and tag in one step:
+
+```bash
+npm version patch   # 0.1.0 -> 0.1.1
+npm version minor   # 0.1.0 -> 0.2.0
+npm version major   # 0.1.0 -> 1.0.0
+```
+
+Then push the commit and tag:
+
+```bash
+git push origin main --tags
+```
+
+## CI
+
+Every push to `main` and every pull request runs `.github/workflows/ci.yml`:
+
+- Tests on Node 18, 20, and 22
+- Syntax checks on all source files
+
+## Required secrets
+
+No additional secrets are needed. `GITHUB_TOKEN` is provided automatically by GitHub Actions for creating releases.
+
+## Install script
+
+The one-command installer lives at `install.sh` in the repo root. Users run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CommitQuest/cli/main/install.sh | bash
+```
+
+The script checks for macOS/Linux, verifies Node.js 18+, fetches the latest `.tgz` from GitHub Releases, and installs it globally with `npm install -g <tarball-url>`. It does not auto-install Node -- it prints platform-specific instructions if Node is missing.
+
+## Manual packaging
+
+To create a tarball locally:
+
+```bash
+npm pack
+# Produces commitquest-0.1.0.tgz
+```
+
+To install from a local tarball:
+
+```bash
+npm install -g ./commitquest-0.1.0.tgz
+```
+
+To see what would be included without creating the file:
+
+```bash
+npm pack --dry-run
+```
+
+## Package contents
+
+The `files` field in `package.json` controls what ships:
 
 - `index.js` (entry point)
 - `api/` directory
 - `commands/` directory
 - `package.json` (always included)
-
-## Creating a Release Tarball
-
-```bash
-cd test/cli
-npm install
-npm pack
-```
-
-This produces `commitquest-1.0.0.tgz` in the current directory.
-
-### Hosting for Download Page
-
-1. Upload `commitquest-1.0.0.tgz` to your download server or GitHub Releases
-2. Provide install instructions:
-
-   ```bash
-   npm install -g https://your-site.com/commitquest-1.0.0.tgz
-   ```
-
-   Or for direct file download:
-
-   ```bash
-   npm install -g ./commitquest-1.0.0.tgz
-   ```
-
-## Publishing to npm
-
-1. Create an npm account at https://www.npmjs.com
-2. Log in: `npm login`
-3. Update `repository` and `homepage` in `package.json` with your repo URL
-4. Publish:
-
-   ```bash
-   cd test/cli
-   npm publish
-   ```
-
-   For a scoped package (e.g. `@your-org/commitquest`), use `npm publish --access public`.
-
-## Version Updates
-
-Version is defined in `package.json` only; the CLI reads it at runtime.
-
-To bump and tag:
-
-```bash
-npm version patch   # 1.0.0 -> 1.0.1
-npm version minor   # 1.0.0 -> 1.1.0
-npm version major   # 1.0.0 -> 2.0.0
-```
-
-## GitHub Actions (Optional)
-
-For automated releases, add a workflow that:
-
-1. Runs on tag push (e.g. `v1.0.0`)
-2. Runs `npm pack` in `test/cli`
-3. Uploads the tarball as a GitHub Release asset
-4. Optionally runs `npm publish`

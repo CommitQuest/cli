@@ -2,24 +2,15 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { default as open } from 'open';
 import ApiClient from '../api/client.js';
-
-// Import CharacterService from character command
 import { CharacterService } from './character.js';
+import { ensureServerReachable, handleCommandError } from './ui.js';
 
 async function loginCommand() {
   try {
     const apiClient = new ApiClient();
     
-    // Check if server is accessible
-    const isServerRunning = await apiClient.healthCheck();
-    if (!isServerRunning) {
-      console.log(chalk.red('❌ Cannot connect to CommitQuest server!'));
-      console.log(chalk.gray('Please check:'));
-      console.log(chalk.gray('• Your internet connection'));
-      console.log(chalk.gray('• The server is running and accessible'));
-      console.log(chalk.gray('• If using a local server: cd server && npm install && npm start'));
-      process.exit(1);
-    }
+    await ensureServerReachable(apiClient);
+
     // Check if already logged in
     try {
       const currentUser = await apiClient.verifyToken();
@@ -39,7 +30,8 @@ async function loginCommand() {
     const deviceFlow = await apiClient.startDeviceFlow();
     
     if (!deviceFlow.success) {
-      console.error(chalk.red('❌ Failed to start device flow:'), deviceFlow.error);
+      console.log(chalk.red('❌ Failed to start authentication.'));
+      console.log(chalk.gray('  The server could not initiate the login flow. Please try again.'));
       process.exit(1);
     }
 
@@ -52,9 +44,9 @@ async function loginCommand() {
     
     // Open browser to verification page
     console.log(chalk.cyan('\n🌐 Opening browser for verification...'));
-    open(verification_uri).catch(err => {
+    open(verification_uri).catch(() => {
       console.log(chalk.yellow('⚠️  Could not open browser automatically. Please visit:'));
-      console.log(chalk.cyan(verification_uri));
+      console.log(chalk.cyan(`  ${verification_uri}`));
     });
 
     console.log(chalk.gray('\n📋 Please enter the verification code above in your browser.'));
@@ -64,11 +56,10 @@ async function loginCommand() {
     const tokenResult = await pollForToken(apiClient, deviceFlow.device_code, deviceFlow.interval, expires_in);
     
     if (!tokenResult.success) {
-      console.error(chalk.red('❌ Authentication failed:'), tokenResult.error);
-      console.log(chalk.gray('\nMake sure you have:'));
-      console.log(chalk.gray('• Entered the verification code correctly'));
-      console.log(chalk.gray('• Completed the authorization in your browser'));
-      console.log(chalk.gray('• The CommitQuest server is running'));
+      console.log(chalk.red('❌ Authentication failed.'));
+      console.log(chalk.gray('Make sure you have:'));
+      console.log(chalk.gray('  • Entered the verification code correctly'));
+      console.log(chalk.gray('  • Completed the authorization in your browser'));
       process.exit(1);
     }
 
@@ -78,17 +69,15 @@ async function loginCommand() {
       console.log(chalk.green('\n✅ Login successful!'));
       console.log(chalk.cyan(`👤 Welcome, ${currentUser.github_username}!`));
       
-     // Check if user has a character, if not, prompt to create one
+      // Check if user has a character, if not, prompt to create one
       const character = await apiClient.getCharacter();
       if (!character) {
         console.log(chalk.yellow('\n🎭 You don\'t have a character yet!'));
-        console.log(chalk.gray('Let’s create one now!\n'));
+        console.log(chalk.gray('Let\u2019s create one now!\n'));
 
-        // Fetch species and class options
         const speciesList = await apiClient.getSpecies();
         const classList = await apiClient.getCharacterClasses();
 
-        // Prompt user for character name, species, and class
         const answers = await inquirer.prompt([
           {
             type: 'input',
@@ -117,7 +106,7 @@ async function loginCommand() {
         ]);
 
         try {
-          const newChar = await apiClient.createCharacter(answers.name, answers.classId, answers.speciesId);
+          await apiClient.createCharacter(answers.name, answers.classId, answers.speciesId);
 
           console.log(chalk.green('\n✅ Character created successfully!'));
           console.log(chalk.cyan(`🧝 Name: ${answers.name}`));
@@ -126,39 +115,33 @@ async function loginCommand() {
 
           CharacterService.touchConfigFile();
         } catch (charError) {
-          console.log(chalk.red('❌ Failed to create character:'), charError.message);
+          console.log(chalk.red('❌ Failed to create character.'));
+          console.log(chalk.gray(`  ${charError.message}`));
         }
       }
 
       
     } catch (error) {
-      console.error(chalk.red('❌ Login failed. Please try again.'));
+      console.log(chalk.red('❌ Login failed. Please try again.'));
       apiClient.clearStoredToken();
       process.exit(1);
     }
 
     console.log(chalk.gray('\nYou can now use all CommitQuest commands.'));
-    console.log(''); // Force a new line
+    console.log('');
     
-    // Exit after current event loop iteration
     process.nextTick(() => process.exit(0));
     
   } catch (error) {
-    console.error(chalk.red('❌ Login failed:'), error.message);
-    console.log(chalk.gray('\nMake sure you have:'));
-    console.log(chalk.gray('• The CommitQuest server running'));
-    console.log(chalk.gray('• A valid GitHub account'));
-    console.log(chalk.gray('• Proper internet connection'));
-    
-    process.exit(1);
+    handleCommandError(error, { label: 'Login failed.' });
   }
 }
 
 // Helper function to poll for token with proper delays
 async function pollForToken(apiClient, deviceCode, interval, expiresIn) {
   const startTime = Date.now();
-  const maxWaitTime = expiresIn * 1000; // Convert to milliseconds
-  let currentInterval = interval * 1000; // Convert to milliseconds
+  const maxWaitTime = expiresIn * 1000;
+  let currentInterval = interval * 1000;
   let pollCount = 0;
   
   console.log(chalk.gray(`⏳ Polling every ${interval} seconds until authorization...`));
@@ -169,16 +152,13 @@ async function pollForToken(apiClient, deviceCode, interval, expiresIn) {
     
     if (result.success) {
       console.log(chalk.green('\n🎉 Authorization successful!'));
-      // Store the token when successful
       if (result.apiToken) {
         apiClient.storeToken(result.apiToken);
       }
       return result;
     }
     
-    // Handle different error types according to GitHub's specification
     if (result.error === 'authorization_pending') {
-      // Show progress indicator
       if (pollCount % 3 === 0) {
         process.stdout.write(chalk.gray('.'));
       }
@@ -187,7 +167,6 @@ async function pollForToken(apiClient, deviceCode, interval, expiresIn) {
     }
     
     if (result.error === 'slow_down') {
-      // Increase interval by 5 seconds as per GitHub spec
       currentInterval += 5000;
       console.log(chalk.yellow(`\n⏳ Rate limited, increasing interval to ${currentInterval/1000}s`));
       await sleep(currentInterval);
@@ -208,20 +187,17 @@ async function pollForToken(apiClient, deviceCode, interval, expiresIn) {
       };
     }
     
-    // For other errors, return the error
     return result;
   }
   
-  // Timeout
   return {
     success: false,
     error: 'Authentication timeout - please try again'
   };
 }
 
-// Helper function to sleep
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export default loginCommand; 
+export default loginCommand;

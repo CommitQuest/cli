@@ -2,6 +2,20 @@
 
 A CLI tool that turns Git commits into an RPG-style dashboard. View levels, experience, achievements, and manage your character from the terminal. The CLI connects to the CommitQuest API (separate repo) for auth and data.
 
+## Installation
+
+**One-command install** (macOS / Linux -- requires Node.js 18+):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CommitQuest/cli/main/install.sh | bash
+```
+
+The script checks your system, downloads the latest release from GitHub, and installs it globally. After installing, get started with:
+
+```bash
+commitquest login
+```
+
 ## Requirements
 
 - **Node.js** 18+
@@ -13,7 +27,8 @@ A CLI tool that turns Git commits into an RPG-style dashboard. View levels, expe
 1. **Clone and install:**
 
    ```bash
-   cd test/cli
+   git clone https://github.com/CommitQuest/cli.git
+   cd cli
    npm install
    ```
 
@@ -47,18 +62,24 @@ For local API development, set `COMMITQUEST_DEV=1` or `COMMITQUEST_API_URL=http:
 ## Project Structure
 
 ```
-test/cli/
 ├── index.js              # Entry point, commander setup
 ├── package.json
+├── install.sh            # One-command installer for macOS/Linux
 ├── api/
-│   └── client.js         # API client, token storage, endpoints
-└── commands/
-    ├── login.js          # Device flow auth
-    ├── logout.js         # Logout, clear token
-    ├── character.js      # Character edit/list
-    ├── dashboard.js      # Dashboard display
-    ├── stats.js          # Stats display
-    └── refresh.js        # VS Code extension refresh
+│   ├── client.js         # API client, token storage, endpoints
+│   └── errors.js         # Error classification helpers
+├── commands/
+│   ├── ui.js             # Shared CLI output and error rendering
+│   ├── login.js          # Device flow auth
+│   ├── logout.js         # Logout, clear token
+│   ├── character.js      # Character edit/list
+│   ├── dashboard.js      # Dashboard display
+│   ├── stats.js          # Stats display
+│   └── refresh.js        # VS Code extension refresh
+├── test/                 # Automated tests (Node test runner)
+└── .github/workflows/
+    ├── ci.yml            # Test on push/PR
+    └── release.yml       # Publish on tag push
 ```
 
 ## Adding a New Command
@@ -112,14 +133,16 @@ const stats = await api.userAPI.getStats();
 | `commitquest stats` | Detailed stats |
 | `commitquest refresh` | Refresh VS Code extension |
 
-## Packaging
+## Releasing
 
-See [PACKAGING.md](./PACKAGING.md) for creating tarballs and publishing.
+Releases are automated via GitHub Actions. See [PACKAGING.md](./PACKAGING.md) for full details.
 
 ```bash
-npm pack
-# Produces commitquest-1.0.0.tgz
+npm version patch        # Bump version and create a git tag
+git push origin main --tags   # Push triggers the release pipeline
 ```
+
+The pipeline runs tests, builds a tarball, and creates a GitHub Release.
 
 ## License
 
