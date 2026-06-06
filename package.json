@@ -16,7 +16,7 @@
     "start": "node index.js",
     "dev": "node index.js",
     "pack": "npm pack",
-    "test": "node --test 'test/*.test.js'"
+    "test": "node --test test/*.test.js"
   },
   "keywords": [
     "git",
