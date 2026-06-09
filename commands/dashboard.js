@@ -8,9 +8,6 @@ async function dashboardCommand(options) {
     const apiClient = new ApiClient();
     const user = await requireAuth(apiClient);
     
-    console.log(chalk.blue.bold('🏰 Loading your CommitQuest Dashboard...\n'));
-    console.log(chalk.gray(`👤 Logged in as: ${user.github_username}\n`));
-    
     // Display character info
     const character = await CharacterService.displayCharacter(user.id);
     if (character) {
