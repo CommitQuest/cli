@@ -15,7 +15,7 @@ export function printServerUnreachable() {
   console.log(chalk.gray('  • Your internet connection'));
   console.log(chalk.gray('  • That the server is running and accessible'));
   if (process.env.COMMITQUEST_DEV === '1' || process.env.NODE_ENV === 'development') {
-    console.log(chalk.gray('  • If using a local server: cd server && npm install && npm start'));
+    console.log(chalk.gray('  • If using a local API, confirm COMMITQUEST_API_URL is correct'));
   }
 }
 

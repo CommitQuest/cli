@@ -37,11 +37,6 @@ async function loginCommand() {
 
     const { user_code, verification_uri, expires_in } = deviceFlow;
 
-    // Display the user code
-    console.log(chalk.green('\n📱 Your verification code:'));
-    console.log(chalk.cyan.bold(`  ${user_code}`));
-    console.log(chalk.gray(`\n⏰ This code expires in ${Math.floor(expires_in / 60)} minutes`));
-    
     // Open browser to verification page
     console.log(chalk.cyan('\n🌐 Opening browser for verification...'));
     open(verification_uri).catch(() => {
@@ -49,8 +44,12 @@ async function loginCommand() {
       console.log(chalk.cyan(`  ${verification_uri}`));
     });
 
-    console.log(chalk.gray('\n📋 Please enter the verification code above in your browser.'));
-    console.log(chalk.gray('Waiting for authorization...\n'));
+    console.log(chalk.gray('\n📋 Please enter the verification code below in your browser.'));
+
+    // Display the user code
+    console.log(chalk.green('\n📱 Your verification code:'));
+    console.log(chalk.cyan.bold(`  ${user_code}`));
+    console.log(chalk.gray(`\n⏰ This code expires in ${Math.floor(expires_in / 60)} minutes`));
 
     // Poll for token until successful or expired
     const tokenResult = await pollForToken(apiClient, deviceFlow.device_code, deviceFlow.interval, expires_in);
@@ -70,7 +69,12 @@ async function loginCommand() {
       console.log(chalk.cyan(`👤 Welcome, ${currentUser.github_username}!`));
       
       // Check if user has a character, if not, prompt to create one
-      const character = await apiClient.getCharacter();
+      let character = null;
+      try {
+        character = await apiClient.getCharacter();
+      } catch (_) {
+        // Treat fetch failures (e.g. 404 for new users) as "no character"
+      }
       if (!character) {
         console.log(chalk.yellow('\n🎭 You don\'t have a character yet!'));
         console.log(chalk.gray('Let\u2019s create one now!\n'));

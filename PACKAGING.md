@@ -13,7 +13,8 @@ This triggers `.github/workflows/release.yml`, which:
 
 1. Installs dependencies and runs the test suite
 2. Runs `npm pack` to create the tarball
-3. Creates a GitHub Release with auto-generated notes and the `.tgz` attached
+3. Copies the package tarball to `commitquest-latest.tgz`
+4. Creates a GitHub Release with auto-generated notes and both `.tgz` assets attached
 
 ## Version bumping
 
@@ -51,6 +52,12 @@ curl -fsSL https://raw.githubusercontent.com/CommitQuest/cli/main/install.sh | b
 ```
 
 The script checks for macOS/Linux, verifies Node.js 18+, fetches the latest `.tgz` from GitHub Releases, and installs it globally with `npm install -g <tarball-url>`. It does not auto-install Node -- it prints platform-specific instructions if Node is missing.
+
+Users can also install the stable latest asset directly:
+
+```bash
+npm install -g https://github.com/CommitQuest/cli/releases/latest/download/commitquest-latest.tgz
+```
 
 ## Manual packaging
 

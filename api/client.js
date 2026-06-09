@@ -3,11 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+const PRODUCTION_API_URL = 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api';
+const LOCAL_API_URL = 'http://localhost:3001/api';
+
 class ApiClient {
   constructor() {
     const useLocal = process.env.COMMITQUEST_DEV === '1' || process.env.NODE_ENV === 'development';
     this.baseURL = process.env.COMMITQUEST_API_URL ||
-      (useLocal ? 'http://localhost:3001/api' : 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api');
+      (useLocal ? LOCAL_API_URL : PRODUCTION_API_URL);
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -58,7 +61,8 @@ class ApiClient {
       }
       config.apiToken = token;
       config.apiBaseUrl = this.baseURL.replace(/\/+$/, '');
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
+      fs.chmodSync(configPath, 0o600);
     } catch (error) {
       console.error('Error storing token:', error.message);
     }

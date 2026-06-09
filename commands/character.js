@@ -34,7 +34,8 @@ class CharacterService {
       config._lastUpdated = new Date().toISOString();
       config._extensionVersion = '1.0.0';
       
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
+      fs.chmodSync(configPath, 0o600);
       
     } catch (error) {
       console.debug('Failed to touch config file:', error.message);

@@ -16,6 +16,12 @@ The script checks your system, downloads the latest release from GitHub, and ins
 commitquest login
 ```
 
+If you prefer not to pipe a remote script into your shell, download the latest `.tgz` from the GitHub Releases page and install it directly:
+
+```bash
+npm install -g https://github.com/CommitQuest/cli/releases/latest/download/commitquest-latest.tgz
+```
+
 ## Requirements
 
 - **Node.js** 18+
@@ -53,7 +59,7 @@ The CLI uses these env vars (all optional):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `COMMITQUEST_API_URL` | API base URL (no trailing slash) | `https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api` |
+| `COMMITQUEST_API_URL` | API base URL (no trailing slash) | Hosted CommitQuest API |
 | `COMMITQUEST_DEV` | Set to `1` to use `http://localhost:3001/api` | — |
 | `NODE_ENV` | `development` uses local API | — |
 
@@ -111,13 +117,14 @@ The client in `api/client.js` handles:
 
 - **Auth token** – Stored in `~/.commitquest/config.json`
 - **Base URL** – From `COMMITQUEST_API_URL` or `COMMITQUEST_DEV`
-- **Endpoints** – `authAPI`, `characterAPI`, `userAPI`, `achievementAPI`, etc.
+- **Endpoints** – Methods such as `verifyToken()`, `getUserStats()`, `getCharacter()`, and `getAchievements()`
 
 Use it from commands:
 
 ```javascript
-const api = (await import('../api/client.js')).default;
-const stats = await api.userAPI.getStats();
+const ApiClient = (await import('../api/client.js')).default;
+const apiClient = new ApiClient();
+const stats = await apiClient.getUserStats();
 ```
 
 ## Available Commands
@@ -144,6 +151,12 @@ git push origin main --tags   # Push triggers the release pipeline
 
 The pipeline runs tests, builds a tarball, and creates a GitHub Release.
 
+## Security
+
+Do not commit `.env` files, local config files, API tokens, or credentials. Runtime auth tokens are stored locally in `~/.commitquest/config.json` with restricted file permissions.
+
+To report a security issue, please follow the instructions in [SECURITY.md](./SECURITY.md).
+
 ## License
 
-ISC
+ISC. See [LICENSE](./LICENSE).
