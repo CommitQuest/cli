@@ -6,6 +6,27 @@ import os from 'os';
 const PRODUCTION_API_URL = 'https://commit-quest-app-3914e1ae3b5a.herokuapp.com/api';
 const LOCAL_API_URL = 'http://localhost:3001/api';
 
+export function parsePositiveId(value, label) {
+  if (value == null || value === '') {
+    throw new Error(`${label} is required`);
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${label} must be a positive integer`);
+  }
+
+  return parsed;
+}
+
+function normalizeEntity(entity) {
+  const rawId = entity.id ?? entity.class_id ?? entity.species_id;
+  return {
+    ...entity,
+    id: parsePositiveId(rawId, `id for "${entity.name}"`),
+  };
+}
+
 class ApiClient {
   constructor() {
     const useLocal = process.env.COMMITQUEST_DEV === '1' || process.env.NODE_ENV === 'development';
@@ -158,12 +179,12 @@ class ApiClient {
   // Character methods
   async getCharacterClasses() {
     const response = await this.client.get('/character/classes');
-    return response.data.classes;
+    return response.data.classes.map(normalizeEntity);
   }
 
   async getSpecies() {
     const response = await this.client.get('/character/species');
-    return response.data.species;
+    return response.data.species.map(normalizeEntity);
   }
 
   async getCharacter() {
@@ -172,15 +193,19 @@ class ApiClient {
   }
 
   async createCharacter(name, classId, speciesId) {
-    const response = await this.client.post('/character', { name, class_id: classId, species_id: speciesId });
+    const response = await this.client.post('/character', {
+      name: String(name).trim(),
+      class_id: parsePositiveId(classId, 'class_id'),
+      species_id: parsePositiveId(speciesId, 'species_id'),
+    });
     return response.data.character;
   }
 
   async updateCharacter(name, classId = null, speciesId = null) {
-    const payload = { name };
-    if (classId) payload.class_id = classId;
-    if (speciesId) payload.species_id = speciesId;
-    
+    const payload = { name: String(name).trim() };
+    if (classId != null) payload.class_id = parsePositiveId(classId, 'class_id');
+    if (speciesId != null) payload.species_id = parsePositiveId(speciesId, 'species_id');
+
     const response = await this.client.put('/character', payload);
     return response.data.character;
   }
