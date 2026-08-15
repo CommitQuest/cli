@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import stripAnsi from 'strip-ansi';
 import {
   printAuthRequired,
   printServerUnreachable,
@@ -30,7 +31,7 @@ afterEach(() => {
 });
 
 function output() {
-  return captured.join('\n');
+  return stripAnsi(captured.join('\n'));
 }
 
 // ---------------------------------------------------------------------------
@@ -157,19 +158,21 @@ describe('printGenericError', () => {
 
 describe('formatLevelProgressBar', () => {
   it('renders level progress as a loading-style bar', () => {
-    const text = formatLevelProgressBar({
+    const text = stripAnsi(formatLevelProgressBar({
       currentLevel: 3,
       expInCurrentLevel: 45,
       expNeededForNextLevel: 238,
       progress: 18.91,
       totalExp: 270
-    }, { width: 10 });
+    }, { width: 10 }));
 
-    assert.equal(text, [
-      'Lv 3 [██░░░░░░░░] Lv 4',
-      '45/238 XP (18.91%)',
-      'Total XP: 270'
-    ].join('\n'));
+    assert.match(text, /Lv 3 \[/);
+    assert.match(text, /\] Lv 4/);
+    assert.match(text, /45\/238 XP/);
+    assert.match(text, /\(18\.91%\)/);
+    assert.match(text, /Total XP: 270/);
+    // ~19% of 10 cells => 2 filled
+    assert.match(text, /█{2}░{8}/);
   });
 
   it('returns null when level progress is missing', () => {
@@ -177,18 +180,19 @@ describe('formatLevelProgressBar', () => {
   });
 
   it('clamps progress to a valid bar range', () => {
-    const text = formatLevelProgressBar({
+    const text = stripAnsi(formatLevelProgressBar({
       currentLevel: 2,
       expInCurrentLevel: 999,
       expNeededForNextLevel: 100,
       progress: 120,
       totalExp: 999
-    }, { width: 5 });
+    }, { width: 5 }));
 
-    assert.equal(text, [
-      'Lv 2 [█████] Lv 3',
-      '999/100 XP (100%)',
-      'Total XP: 999'
-    ].join('\n'));
+    assert.match(text, /Lv 2 \[/);
+    assert.match(text, /\] Lv 3/);
+    assert.match(text, /999\/100 XP/);
+    assert.match(text, /\(100%\)/);
+    assert.match(text, /Total XP: 999/);
+    assert.match(text, /█{5}/);
   });
 });

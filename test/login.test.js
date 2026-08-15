@@ -3,6 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import {
+  isRetryableDevicePollError,
+  isServerPollRateLimitError,
+  resolvePollIntervalMs,
+  resolveRateLimitWaitMs,
+} from '../commands/login.js';
+import { parseRetryAfterMs } from '../api/client.js';
 
 // ---------------------------------------------------------------------------
 // Token storage tests (directly on ApiClient)
@@ -82,19 +89,62 @@ describe('ApiClient token storage', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Device-flow polling helpers
+// ---------------------------------------------------------------------------
+
+describe('device poll helpers', () => {
+  it('uses the GitHub-provided poll interval with a 5s floor', () => {
+    assert.equal(resolvePollIntervalMs(5), 5000);
+    assert.equal(resolvePollIntervalMs(12), 12000);
+    assert.equal(resolvePollIntervalMs(undefined), 5000);
+  });
+
+  it('treats GitHub slow_down as retryable but not server poll limits', () => {
+    assert.equal(isRetryableDevicePollError('authorization_pending'), true);
+    assert.equal(isRetryableDevicePollError('slow_down'), true);
+    assert.equal(isRetryableDevicePollError('server_poll_rate_limit'), false);
+    assert.equal(
+      isRetryableDevicePollError('Too many device token polls, please slow down'),
+      false
+    );
+    assert.equal(isRetryableDevicePollError('expired_token'), false);
+  });
+
+  it('detects server-side device poll rate limits', () => {
+    assert.equal(isServerPollRateLimitError('server_poll_rate_limit'), true);
+    assert.equal(
+      isServerPollRateLimitError('slow_down', 'Too many device token polls, please slow down'),
+      true
+    );
+    assert.equal(isServerPollRateLimitError('slow_down'), false);
+    assert.equal(isServerPollRateLimitError('authorization_pending'), false);
+  });
+
+  it('uses GitHub +5s backoff for plain slow_down', () => {
+    assert.equal(resolveRateLimitWaitMs({ currentIntervalMs: 10000 }), 15000);
+  });
+
+  it('honors Retry-After when longer than the default backoff', () => {
+    assert.equal(
+      resolveRateLimitWaitMs({
+        currentIntervalMs: 10000,
+        retryAfterMs: 120000,
+      }),
+      120000
+    );
+  });
+
+  it('parses Retry-After and RateLimit-Reset headers', () => {
+    assert.equal(parseRetryAfterMs({ 'retry-after': '90' }), 90000);
+    assert.equal(parseRetryAfterMs({ 'ratelimit-reset': '45' }), 45000);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Device-flow polling logic tests
 // ---------------------------------------------------------------------------
 
 describe('pollForToken logic', () => {
-  let pollForToken;
-
-  beforeEach(async () => {
-    // We dynamically import the module to isolate state.
-    // pollForToken is not exported directly, so we test it via the login module
-    // by extracting the logic pattern. Instead we test via a minimal reimplementation
-    // that mirrors the real logic, validated against the actual source.
-  });
-
   it('returns success when API responds with success and apiToken', async () => {
     let pollCount = 0;
     const mockApiClient = {
@@ -127,6 +177,21 @@ describe('pollForToken logic', () => {
 
     const result = await simulatePoll(mockApiClient, 'dev', 0.01, 10);
     assert.equal(result.success, true);
+  });
+
+  it('fails clearly when the server poll rate limit is hit', async () => {
+    const mockApiClient = {
+      pollForToken: async () => ({
+        success: false,
+        error: 'server_poll_rate_limit',
+        details: 'Too many device token polls, please slow down',
+      }),
+      storeToken: () => {},
+    };
+
+    const result = await simulatePoll(mockApiClient, 'dev', 0.01, 10);
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'server_poll_rate_limit');
   });
 
   it('returns failure on expired_token', async () => {
@@ -171,16 +236,26 @@ describe('pollForToken logic', () => {
 async function simulatePoll(apiClient, deviceCode, intervalSec, expiresInSec) {
   const startTime = Date.now();
   const maxWaitTime = expiresInSec * 1000;
+  // Tests use tiny intervals; production uses resolvePollIntervalMs().
   let currentInterval = intervalSec * 1000;
 
   while (Date.now() - startTime < maxWaitTime) {
     const result = await apiClient.pollForToken(deviceCode, intervalSec);
 
     if (result.success) {
-      if (result.apiToken) {
-        apiClient.storeToken(result.apiToken);
+      if (!result.apiToken) {
+        return { success: false, error: 'Server authorized but did not return an API token' };
       }
+      apiClient.storeToken(result.apiToken);
       return result;
+    }
+
+    if (isServerPollRateLimitError(result.error, result.details)) {
+      return {
+        success: false,
+        error: 'server_poll_rate_limit',
+        details: result.details || result.error,
+      };
     }
 
     if (result.error === 'authorization_pending') {
@@ -188,8 +263,12 @@ async function simulatePoll(apiClient, deviceCode, intervalSec, expiresInSec) {
       continue;
     }
 
-    if (result.error === 'slow_down') {
-      currentInterval += 5;
+    if (isRetryableDevicePollError(result.error) && result.error !== 'authorization_pending') {
+      const waitMs = resolveRateLimitWaitMs({
+        currentIntervalMs: currentInterval,
+        retryAfterMs: result.retryAfterMs,
+      });
+      currentInterval = Math.min(waitMs, currentInterval + 5);
       await sleep(currentInterval);
       continue;
     }

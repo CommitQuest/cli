@@ -14,6 +14,7 @@ The script checks your system, downloads the latest release from GitHub, and ins
 
 ```bash
 commitquest login
+# or the short alias: cqst login
 ```
 
 If you prefer not to pipe a remote script into your shell, download the latest `.tgz` from the GitHub Releases page and install it directly:
@@ -50,7 +51,7 @@ npm install -g https://github.com/CommitQuest/cli/releases/latest/download/commi
 
    ```bash
    npm link
-   # Then use: commitquest login
+   # Then use: commitquest login  (or: cqst login)
    ```
 
 ## Environment Variables
@@ -61,7 +62,6 @@ The CLI uses these env vars (all optional):
 |----------|-------------|---------|
 | `COMMITQUEST_API_URL` | API base URL (no trailing slash) | Hosted CommitQuest API |
 | `COMMITQUEST_DEV` | Set to `1` to use `http://localhost:3001/api` | — |
-| `NODE_ENV` | `development` uses local API | — |
 
 For local API development, set `COMMITQUEST_DEV=1` or `COMMITQUEST_API_URL=http://localhost:3001/api`.
 
@@ -128,6 +128,8 @@ const stats = await apiClient.getUserStats();
 ```
 
 ## Available Commands
+
+`cqst` is a short alias for `commitquest` — both commands are equivalent.
 
 | Command | Description |
 |---------|-------------|

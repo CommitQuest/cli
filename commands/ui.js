@@ -1,122 +1,93 @@
 import chalk from 'chalk';
-import cliProgress from 'cli-progress';
 import { classifyError, isAuthError } from '../api/errors.js';
+import {
+  errorBanner,
+  warnBanner,
+  infoHint,
+  xpMeter,
+  palette,
+} from './theme.js';
 
 export function printAuthRequired() {
-  console.log(chalk.red('❌ Authentication required!'));
-  console.log(chalk.yellow('Please log in first with:'));
-  console.log(chalk.cyan('  commitquest login'));
-  console.log(chalk.gray('\nThis will open your browser to authorize with GitHub.'));
+  console.log(
+    errorBanner('Authentication required!', [
+      'Please log in first with:',
+      '',
+      chalk.cyan('  commitquest login'),
+      '',
+      'This will open your browser to authorize with GitHub.',
+    ])
+  );
 }
 
 export function printServerUnreachable() {
-  console.log(chalk.red('❌ Cannot connect to the CommitQuest server!'));
-  console.log(chalk.gray('Please check:'));
-  console.log(chalk.gray('  • Your internet connection'));
-  console.log(chalk.gray('  • That the server is running and accessible'));
-  if (process.env.COMMITQUEST_DEV === '1' || process.env.NODE_ENV === 'development') {
-    console.log(chalk.gray('  • If using a local API, confirm COMMITQUEST_API_URL is correct'));
+  const hints = [
+    'Please check:',
+    '  • Your internet connection',
+    '  • That the server is running and accessible',
+  ];
+  if (process.env.COMMITQUEST_DEV === '1') {
+    hints.push('  • If using a local API, confirm COMMITQUEST_API_URL is correct');
   }
+  console.log(errorBanner('Cannot connect to the CommitQuest server!', hints));
 }
 
 export function printNetworkError() {
-  console.log(chalk.red('❌ Network error!'));
-  console.log(chalk.gray('CommitQuest could not reach the server. Please check:'));
-  console.log(chalk.gray('  • Your internet or Wi-Fi connection'));
-  console.log(chalk.gray('  • Any VPN or firewall settings'));
-  console.log(chalk.gray('  • That the server is online'));
+  console.log(
+    errorBanner('Network error!', [
+      'CommitQuest could not reach the server. Please check:',
+      '  • Your internet or Wi-Fi connection',
+      '  • Any VPN or firewall settings',
+      '  • That the server is online',
+    ])
+  );
 }
 
 export function printTimeoutError() {
-  console.log(chalk.red('❌ Request timed out!'));
-  console.log(chalk.gray('The server took too long to respond.'));
-  console.log(chalk.gray('Please try again in a moment.'));
+  console.log(
+    errorBanner('Request timed out!', [
+      'The server took too long to respond.',
+      'Please try again in a moment.',
+    ])
+  );
 }
 
 export function printServerError() {
-  console.log(chalk.red('❌ Server error!'));
-  console.log(chalk.gray('The CommitQuest server ran into a problem.'));
-  console.log(chalk.gray('Please try again later. If this persists, check the project status page.'));
+  console.log(
+    errorBanner('Server error!', [
+      'The CommitQuest server ran into a problem.',
+      'Please try again later. If this persists, check the project status page.',
+    ])
+  );
 }
 
 export function printForbiddenError() {
-  console.log(chalk.red('❌ Permission denied!'));
-  console.log(chalk.gray('Your account does not have access to this resource.'));
-  console.log(chalk.gray('You may need to re-authorize the GitHub App:'));
-  console.log(chalk.cyan('  commitquest logout'));
-  console.log(chalk.cyan('  commitquest login'));
+  console.log(
+    errorBanner('Permission denied!', [
+      'Your account does not have access to this resource.',
+      'You may need to re-authorize the GitHub App:',
+      '',
+      chalk.cyan('  commitquest logout'),
+      chalk.cyan('  commitquest login'),
+    ])
+  );
 }
 
 export function printRateLimited() {
-  console.log(chalk.yellow('⚠️  Rate limited!'));
-  console.log(chalk.gray('Too many requests. Please wait a moment and try again.'));
+  console.log(
+    warnBanner('Rate limited!', [
+      'Too many requests. Please wait a moment and try again.',
+    ])
+  );
 }
 
 export function printGenericError(label, detail) {
-  console.log(chalk.red(`❌ ${label}`));
-  if (detail) {
-    console.log(chalk.gray(`  ${detail}`));
-  }
-}
-
-function clampProgress(progress) {
-  if (!Number.isFinite(progress)) {
-    return 0;
-  }
-
-  return Math.min(100, Math.max(0, progress));
-}
-
-function formatPercent(progress) {
-  return Number(progress.toFixed(2)).toString();
+  const details = detail ? [detail] : [];
+  console.log(errorBanner(label, details));
 }
 
 export function formatLevelProgressBar(levelProgress, { width = 20 } = {}) {
-  if (!levelProgress || !Number.isFinite(levelProgress.currentLevel)) {
-    return null;
-  }
-
-  const currentLevel = levelProgress.currentLevel;
-  const expInCurrentLevel = Number.isFinite(levelProgress.expInCurrentLevel)
-    ? levelProgress.expInCurrentLevel
-    : 0;
-  const expNeededForNextLevel = Number.isFinite(levelProgress.expNeededForNextLevel)
-    ? levelProgress.expNeededForNextLevel
-    : 0;
-  const progress = clampProgress(
-    Number.isFinite(levelProgress.progress)
-      ? levelProgress.progress
-      : (expNeededForNextLevel > 0 ? (expInCurrentLevel / expNeededForNextLevel) * 100 : 0)
-  );
-
-  const safeWidth = Math.max(1, width);
-  const progressBar = new cliProgress.SingleBar({
-    barsize: safeWidth,
-    format: 'Lv {currentLevel} [{bar}] Lv {nextLevel}',
-  }, cliProgress.Presets.shades_classic);
-  const bar = cliProgress.Format.Formatter(
-    progressBar.options,
-    {
-      progress: progress / 100,
-      eta: 0,
-      startTime: Date.now(),
-      stopTime: Date.now(),
-      total: expNeededForNextLevel,
-      value: expInCurrentLevel,
-      maxWidth: 1000
-    },
-    {
-      currentLevel,
-      nextLevel: currentLevel + 1
-    }
-  );
-  const totalExp = Number.isFinite(levelProgress.totalExp) ? levelProgress.totalExp : 0;
-
-  return [
-    bar,
-    `${expInCurrentLevel}/${expNeededForNextLevel} XP (${formatPercent(progress)}%)`,
-    `Total XP: ${totalExp}`
-  ].join('\n');
+  return xpMeter(levelProgress, { width });
 }
 
 /**
@@ -192,3 +163,5 @@ export async function ensureServerReachable(apiClient) {
     process.exit(1);
   }
 }
+
+export { palette, infoHint };

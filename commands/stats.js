@@ -1,31 +1,55 @@
-import chalk from 'chalk';
 import ApiClient from '../api/client.js';
 import { requireAuth, handleCommandError, formatLevelProgressBar } from './ui.js';
+import {
+  compactBanner,
+  box,
+  sectionTitle,
+  divider,
+  streakVisual,
+  commitsVisual,
+  infoHint,
+  palette,
+} from './theme.js';
 
-async function statsCommand(options) {
+async function statsCommand() {
   try {
     const apiClient = new ApiClient();
     await requireAuth(apiClient);
-    
-    console.log(chalk.blue.bold('📊 CommitQuest Statistics\n'));
-    
-    // Get user stats from server
+
+    console.log('');
+    console.log(compactBanner('Statistics'));
+    console.log('');
+    console.log(sectionTitle('Chronicle', { width: 48, accent: 'teal' }));
+    console.log('');
+
     const serverStats = await apiClient.getUserStats();
 
-    // Display server statistics
-    console.log(chalk.yellow.bold('Statistics:\n'));
+    const lines = [];
+    const levelProgressBar = formatLevelProgressBar(serverStats.levelProgress, { width: 24 });
 
-    const levelProgressBar = formatLevelProgressBar(serverStats.levelProgress);
     if (levelProgressBar) {
-      console.log(chalk.cyan('Level Progress:'));
-      console.log(chalk.white(levelProgressBar));
+      lines.push(palette.amber('  Level Progress'));
+      lines.push(...levelProgressBar.split('\n').map((l) => `  ${l}`));
+      lines.push('');
     } else {
-      console.log(chalk.cyan('Level:'), chalk.white(serverStats.level));
+      lines.push(palette.mist('  Level          ') + palette.goldBright(String(serverStats.level)));
     }
-    console.log(chalk.cyan('Experience Gained:'), chalk.white(serverStats.experienceGained));
-    console.log(chalk.cyan('Total Commits:'), chalk.white(serverStats.totalCommits));
-    console.log(chalk.cyan('Current Streak:'), chalk.white(serverStats.streakCount + ' days'));
 
+    lines.push(
+      palette.mist('  Experience     ') + palette.goldBright(`${serverStats.experienceGained} XP`)
+    );
+    lines.push(
+      palette.mist('  Total Commits  ') + palette.teal(commitsVisual(serverStats.totalCommits))
+    );
+    lines.push(
+      palette.mist('  Current Streak ') + streakVisual(serverStats.streakCount)
+    );
+
+    console.log(box(lines, { title: '⚔ Stats', width: 50, style: 'heavy', color: 'teal' }));
+    console.log('');
+    console.log(divider(48, 'ornate'));
+    console.log(infoHint('Tip: keep committing daily to grow your streak blaze'));
+    console.log('');
   } catch (error) {
     handleCommandError(error, { label: 'Error loading statistics.' });
   }

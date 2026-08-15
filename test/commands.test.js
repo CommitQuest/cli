@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import stripAnsi from 'strip-ansi';
 
 // ---------------------------------------------------------------------------
 // We test command-level behaviour by stubbing ApiClient and intercepting
@@ -32,7 +33,7 @@ afterEach(() => {
 });
 
 function output() {
-  return captured.join('\n');
+  return stripAnsi(captured.join('\n'));
 }
 
 // ---------------------------------------------------------------------------

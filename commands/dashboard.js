@@ -1,68 +1,147 @@
-import chalk from 'chalk';
 import ApiClient from '../api/client.js';
-import { CharacterService } from './character.js';
 import { requireAuth, handleCommandError, formatLevelProgressBar } from './ui.js';
+import {
+  banner,
+  box,
+  divider,
+  streakVisual,
+  commitsVisual,
+  characterPortrait,
+  infoHint,
+  palette,
+  columns,
+  appWindow,
+  meterTile,
+  trophyGrid,
+  commandHint,
+  sparkleLine,
+} from './theme.js';
 
-async function dashboardCommand(options) {
+async function dashboardCommand() {
   try {
     const apiClient = new ApiClient();
     const user = await requireAuth(apiClient);
-    
-    // Display character info
-    const character = await CharacterService.displayCharacter(user.id);
-    if (character) {
-      console.log(chalk.gray('─'.repeat(50) + '\n'));
-    }
-    
-    // Get user stats from server
-    const serverStats = await apiClient.getUserStats();
 
-    // Check for achievements
-    const achievementResult = await apiClient.getUserAchievements();
-    
-    // Display the dashboard
-    displayDashboard(serverStats, achievementResult|| []);
-    
+    const [character, serverStats] = await Promise.all([
+      apiClient.getCharacterOrNull(),
+      apiClient.getUserStats(),
+    ]);
+
+    let achievements = [];
+    try {
+      const achievementResult = await apiClient.getUserAchievements();
+      achievements = Array.isArray(achievementResult) ? achievementResult : [];
+    } catch (_) {
+      // Achievements are optional on the dashboard
+    }
+
+    renderDashboard({
+      user,
+      character,
+      serverStats,
+      achievements,
+    });
   } catch (error) {
     handleCommandError(error, { label: 'Error loading dashboard.' });
   }
 }
 
-function displayDashboard(serverStats, achievements) {
-  console.log(chalk.blue.bold('🏰 CommitQuest Dashboard\n'));
-  
-  // Player stats section
-  console.log(chalk.yellow.bold('⚔️  Player Stats:'));
-  const levelProgressBar = formatLevelProgressBar(serverStats.levelProgress);
-  if (levelProgressBar) {
-    console.log(chalk.cyan('  Level Progress:'));
-    console.log(chalk.white(levelProgressBar.split('\n').map(line => `  ${line}`).join('\n')));
+function renderDashboard({ user, character, serverStats, achievements }) {
+  const username = user?.github_username || 'adventurer';
+  const level = serverStats?.level ?? serverStats?.levelProgress?.currentLevel ?? 1;
+  const xp = serverStats?.experienceGained ?? 0;
+  const commits = serverStats?.totalCommits ?? 0;
+  const streak = serverStats?.streakCount ?? 0;
+  const progress = Number(serverStats?.levelProgress?.progress);
+  const xpPercent = Number.isFinite(progress) ? progress : 0;
+  const wide = (process.stdout.columns || 80) >= 90;
+
+  console.log('');
+  console.log(banner(`Welcome back, ${username}`));
+  console.log('');
+  console.log(sparkleLine('your RPG command center'));
+  console.log('');
+
+  const heroPanel = character
+    ? characterPortrait(character, { width: 30, title: '✦ Hero' })
+    : box(
+        [
+          palette.amber('  No hero yet'),
+          '',
+          palette.mist('  Create one to begin:'),
+          palette.teal('  commitquest character edit'),
+        ],
+        { title: '✦ Hero', width: 30, style: 'round', color: 'amber' }
+      );
+
+  const levelMeter = formatLevelProgressBar(serverStats?.levelProgress, { width: 20 });
+  const statsBody = [];
+
+  if (levelMeter) {
+    statsBody.push(...levelMeter.split('\n').map((line) => `  ${line}`));
   } else {
-    console.log(chalk.cyan('  Level:'), chalk.white(serverStats.level));
+    statsBody.push(palette.mist('  Level ') + palette.goldBright(String(level)));
   }
-  console.log(chalk.cyan('  Experience:'), chalk.white(serverStats.experienceGained + ' XP'));
-  console.log(chalk.cyan('  Commits:'), chalk.white(serverStats.totalCommits));
-  console.log(chalk.cyan('  Streak:'), chalk.white(serverStats.streakCount + ' days'));
-  
-  // Character info if available
-  if (serverStats.character) {
-    console.log(chalk.yellow.bold('\n👤 Character:'));
-    console.log(chalk.cyan('  Name:'), chalk.white(serverStats.character.name));
-    if (serverStats.character.classes?.name) {
-      console.log(chalk.cyan('  Class:'), chalk.white(serverStats.character.classes.name));
-    }
+
+  statsBody.push('');
+  statsBody.push(
+    meterTile('Experience', `${xp} XP`, xpPercent, { width: 16, icon: '✦' })
+  );
+  statsBody.push('');
+  statsBody.push(palette.stone('  ◈ Commits'));
+  statsBody.push(palette.teal(`  ${commitsVisual(commits)}`));
+  statsBody.push('');
+  statsBody.push(palette.stone('  ≈ Streak'));
+  statsBody.push(`  ${streakVisual(streak)}`);
+
+  const statsPanel = box(statsBody, {
+    title: '⚔ Vitals',
+    width: 36,
+    style: 'double',
+    color: 'gold',
+  });
+
+  console.log(columns(heroPanel, statsPanel, { gap: 3, minWidth: 72 }));
+  console.log('');
+
+  const trophyLines = trophyGrid(achievements, {
+    columns: wide ? 2 : 1,
+    limit: 6,
+  });
+  if (achievements.length > 6) {
+    trophyLines.push(palette.stone(`  … and ${achievements.length - 6} more`));
   }
-  
-  // Achievements section
-  if (achievements.length > 0) {
-    console.log(chalk.yellow.bold('\n🏆 Recent Achievements:'));
-    achievements.slice(0, 3).forEach(achievement => {
-      const icon = achievement.metadata?.icon || '🏆';
-      console.log(chalk.green(`  ${icon} ${achievement.name}`));
-    });
-  }
-  
-  console.log(chalk.gray('\nUse "commitquest stats" for detailed statistics'));
+
+  console.log(
+    box(trophyLines, {
+      title: `★ Trophies (${achievements.length})`,
+      width: wide ? 70 : 56,
+      style: 'round',
+      color: 'emerald',
+    })
+  );
+  console.log('');
+
+  const actions = [
+    commandHint('character edit', 'open character studio'),
+    commandHint('stats', 'detailed chronicle'),
+    commandHint('refresh', 'sync VS Code extension'),
+  ];
+
+  console.log(
+    appWindow({
+      title: 'Quick Actions',
+      subtitle: `signed in as @${username}`,
+      body: actions.map((line) => `  ${line.trimStart()}`).join('\n'),
+      footer: `Lv ${level}  ·  ${commits} commits  ·  ${streak}-day streak`,
+      width: wide ? 70 : 56,
+    })
+  );
+
+  console.log('');
+  console.log(divider(wide ? 70 : 56, 'ornate'));
+  console.log(infoHint('Tip: keep a daily streak to grow your blaze'));
+  console.log('');
 }
 
 export default dashboardCommand;

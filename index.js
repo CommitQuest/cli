@@ -3,7 +3,6 @@
 import 'dotenv/config';
 import { createRequire } from 'module';
 import { Command } from 'commander';
-import chalk from 'chalk';
 
 const require = createRequire(import.meta.url);
 const pkg = require('./package.json');
@@ -71,14 +70,12 @@ program
   .command('dashboard')
   .alias('d')
   .description('Show your RPG-style commit dashboard')
-  .option('-d, --days <number>', 'Number of days to look back', '30')
   .action(dashboardCommand);
 
 program
   .command('stats')
   .alias('s')
   .description('Show detailed commit statistics')
-  .option('-d, --days <number>', 'Number of days to look back', '30')
   .action(statsCommand);
 
 program
@@ -89,18 +86,30 @@ program
 
 // Show welcome message if no arguments are provided
 if (process.argv.length <= 2) {
-  console.log(chalk.blue.bold('🏰 Welcome to CommitQuest! 🏰'));
-  console.log(chalk.gray('Your Git commits become an epic adventure!\n'));
-  console.log(chalk.yellow('Available commands:'));
-  console.log(chalk.cyan('  commitquest login') + chalk.gray(' - Login with GitHub'));
-  console.log(chalk.cyan('  commitquest logout') + chalk.gray(' - Logout from account'));
-  console.log(chalk.cyan('  commitquest character') + chalk.gray(' - View your character'));
-  console.log(chalk.cyan('  commitquest character edit') + chalk.gray(' - Edit your character'));
-  console.log(chalk.cyan('  commitquest character list') + chalk.gray(' - List available classes'));
-  console.log(chalk.cyan('  commitquest dashboard') + chalk.gray(' - Show your RPG dashboard'));
-  console.log(chalk.cyan('  commitquest stats') + chalk.gray(' - Show detailed statistics'));
-  console.log(chalk.cyan('  commitquest refresh') + chalk.gray(' - Refresh VS Code extension'));
-  console.log(chalk.cyan('  commitquest --help') + chalk.gray(' - Show all options'));
+  const { banner, box, commandHint, divider, sparkleLine, infoHint, palette } = await import(
+    './commands/theme.js'
+  );
+  console.log('');
+  console.log(banner('Your Git commits become an epic adventure'));
+  console.log('');
+  console.log(sparkleLine('Choose your next quest'));
+  console.log('');
+  const cmds = [
+    commandHint('commitquest login', 'Login with GitHub'),
+    commandHint('commitquest logout', 'Logout from account'),
+    commandHint('commitquest character', 'View your character'),
+    commandHint('commitquest character edit', 'Edit your character'),
+    commandHint('commitquest character list', 'List available classes'),
+    commandHint('commitquest dashboard', 'Show your RPG dashboard'),
+    commandHint('commitquest stats', 'Show detailed statistics'),
+    commandHint('commitquest refresh', 'Refresh VS Code extension'),
+    commandHint('commitquest --help', 'Show all options'),
+  ];
+  console.log(box(cmds, { title: 'Commands', width: 56, style: 'double', color: 'gold' }));
+  console.log('');
+  console.log(divider(56, 'ornate'));
+  console.log(infoHint(palette.mist('Begin with: commitquest login')));
+  console.log('');
   process.exit(0);
 }
 
