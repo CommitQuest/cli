@@ -166,8 +166,10 @@ describe('formatLevelProgressBar', () => {
       totalExp: 270
     }, { width: 10 }));
 
-    assert.match(text, /Lv 3 \[/);
-    assert.match(text, /\] Lv 4/);
+    assert.match(text, /Lv 3 /);
+    assert.match(text, / Lv 4/);
+    assert.doesNotMatch(text, /\[/);
+    assert.doesNotMatch(text, /\]/);
     assert.match(text, /45\/238 XP/);
     assert.match(text, /\(18\.91%\)/);
     assert.match(text, /Total XP: 270/);
@@ -188,8 +190,8 @@ describe('formatLevelProgressBar', () => {
       totalExp: 999
     }, { width: 5 }));
 
-    assert.match(text, /Lv 2 \[/);
-    assert.match(text, /\] Lv 3/);
+    assert.match(text, /Lv 2 /);
+    assert.match(text, / Lv 3/);
     assert.match(text, /999\/100 XP/);
     assert.match(text, /\(100%\)/);
     assert.match(text, /Total XP: 999/);

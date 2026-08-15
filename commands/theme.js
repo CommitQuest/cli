@@ -332,9 +332,7 @@ export function xpMeter(levelProgress, { width = 22 } = {}) {
   const header =
     palette.amber(`Lv ${currentLevel}`) +
     ' ' +
-    palette.stone('[') +
     bar +
-    palette.stone(']') +
     ' ' +
     palette.gold(`Lv ${currentLevel + 1}`);
 

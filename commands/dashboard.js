@@ -68,8 +68,8 @@ function renderDashboard({ user, character, serverStats, achievements }) {
         [
           palette.amber('  No hero yet'),
           '',
-          palette.mist('  Create one to begin:'),
-          palette.teal('  commitquest character edit'),
+          palette.mist('  Create one after login'),
+          palette.teal('  to begin your quest.'),
         ],
         { title: '✦ Hero', width: 30, style: 'round', color: 'amber' }
       );
@@ -123,7 +123,6 @@ function renderDashboard({ user, character, serverStats, achievements }) {
   console.log('');
 
   const actions = [
-    commandHint('character edit', 'open character studio'),
     commandHint('stats', 'detailed chronicle'),
     commandHint('refresh', 'sync VS Code extension'),
   ];

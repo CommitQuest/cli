@@ -133,11 +133,9 @@ const stats = await apiClient.getUserStats();
 
 | Command | Description |
 |---------|-------------|
+| `commitquest` | RPG dashboard (default) |
 | `commitquest login` | Login with GitHub (device flow) |
 | `commitquest logout` | Logout, clear token |
-| `commitquest character` | View character |
-| `commitquest character edit` | Edit name, class, species |
-| `commitquest character list` | List classes/species |
 | `commitquest dashboard` | RPG dashboard |
 | `commitquest stats` | Detailed stats |
 | `commitquest refresh` | Refresh VS Code extension |

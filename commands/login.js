@@ -141,9 +141,7 @@ async function loginCommand() {
         if (speciesList.length === 0 || classList.length === 0) {
           console.log(
             errorBanner('No character classes or species are available right now.', [
-              'You can try again later with:',
-              '',
-              chalk.cyan('  commitquest character edit'),
+              'You can try again later.',
             ])
           );
         } else {
